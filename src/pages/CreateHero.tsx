@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHero } from '../context/HeroContext';
+import { useAudio } from '../context/AudioContext';
 import { generateStory } from '../utils/storyGenerator';
 
 export default function CreateHero() {
   const { addHero } = useHero();
+  const { isMuted } = useAudio();
   const navigate = useNavigate();
   const [hero, setHero] = useState({
     name: '',
@@ -14,6 +16,31 @@ export default function CreateHero() {
     image: '',
   });
   const [pointsLeft, setPointsLeft] = useState(18);
+  const [audioStarted, setAudioStarted] = useState(false);
+
+  // Inicializar áudio
+  const windSound = new Audio('/audio/wind-ambient.mp3');
+  windSound.loop = true;
+  windSound.volume = 0.3;
+
+  useEffect(() => {
+    windSound.muted = isMuted;
+  }, [isMuted]);
+
+  const startAudio = () => {
+    if (!audioStarted && !isMuted) {
+      windSound.play().catch((e) => console.error('Erro ao tocar som de fundo:', e));
+      setAudioStarted(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      windSound.pause();
+      windSound.currentTime = 0;
+      setAudioStarted(false);
+    };
+  }, []);
 
   const classes = ['Guerreiro', 'Mago', 'Arqueiro', 'Ladino'];
 
@@ -28,13 +55,13 @@ export default function CreateHero() {
 
   const handleGenerateStory = () => {
     const generatedStory = generateStory(hero);
-    console.log('História gerada:', generatedStory); // Log para depuração
+    console.log('História gerada:', generatedStory);
     setHero({ ...hero, story: generatedStory });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Enviando herói:', hero); // Log para depuração
+    console.log('Enviando herói:', hero);
     addHero(hero);
     navigate('/gallery');
   };
@@ -52,7 +79,15 @@ export default function CreateHero() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold text-medieval-gold mb-4">Criar Herói</h1>
+      <h1 className="text-3xl font-bold text-medieval-gold mb-4 font-cinzel">Criar Herói</h1>
+      {!audioStarted && (
+        <button
+          onClick={startAudio}
+          className="mb-4 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600 font-cinzel"
+        >
+          Ativar Som Ambiente
+        </button>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-medieval-gold">Nome</label>
@@ -104,7 +139,7 @@ export default function CreateHero() {
           <button
             type="button"
             onClick={handleGenerateStory}
-            className="mt-2 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
+            className="mt-2 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600 font-cinzel"
           >
             Gerar História
           </button>
@@ -119,7 +154,7 @@ export default function CreateHero() {
         <button
           type="submit"
           disabled={pointsLeft < 0}
-          className="px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
+          className="px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600 font-cinzel"
         >
           Criar Herói
         </button>

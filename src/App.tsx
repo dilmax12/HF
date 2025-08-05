@@ -1,26 +1,31 @@
 import { Routes, Route } from 'react-router-dom';
-import { HeroProvider } from './context/HeroContext';
+import Navbar from './components/Navbar';
 import CreateHero from './pages/CreateHero';
 import Gallery from './pages/Gallery';
 import HeroDetails from './pages/HeroDetails';
+import Battle from './pages/Battle';
+import { HeroProvider } from './context/HeroContext';
+import { AudioProvider } from './context/AudioContext';
 import ParticlesBackground from './components/ParticlesBackground';
-import Navbar from './components/Navbar';
 
 function App() {
   return (
     <HeroProvider>
-      <div className="relative min-h-screen bg-medieval-dark">
-        <ParticlesBackground />
-        <Navbar />
-        <div className="relative z-10">
-          <Routes>
-            <Route path="/" element={<CreateHero />} />
-            <Route path="/create-hero" element={<CreateHero />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/hero/:id" element={<HeroDetails />} />
-          </Routes>
+      <AudioProvider>
+        <div className="relative min-h-screen" style={{ zIndex: 0 }}>
+          <ParticlesBackground />
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            <Navbar />
+            <Routes>
+              <Route path="/create-hero" element={<CreateHero />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/hero/:id" element={<HeroDetails />} />
+              <Route path="/battle" element={<Battle />} />
+              <Route path="/" element={<Gallery />} />
+            </Routes>
+          </div>
         </div>
-      </div>
+      </AudioProvider>
     </HeroProvider>
   );
 }

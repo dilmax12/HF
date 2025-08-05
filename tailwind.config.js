@@ -1,8 +1,7 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    './src/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {
@@ -11,7 +10,10 @@ export default {
         'medieval-gold': '#d4a017',
         'parchment': '#f4e8c1',
       },
+      fontFamily: {
+        cinzel: ['Cinzel', 'serif'],
+      },
     },
   },
   plugins: [],
-}
+};

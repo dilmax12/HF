@@ -1,3 +1,46 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --medieval-dark: #2a1f14;
+  --medieval-gold: #d4a017;
+  --parchment: #f5e8c7;
+}
+
+body {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  background-color: var(--medieval-dark);
+  color: var(--parchment);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.bg-medieval-dark {
+  background-color: var(--medieval-dark);
+}
+
+.text-medieval-gold {
+  color: var(--medieval-gold);
+}
+
+.border-medieval-gold {
+  border-color: var(--medieval-gold);
+}
+
+.animate-shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
