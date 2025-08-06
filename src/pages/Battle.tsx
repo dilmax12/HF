@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useHero } from '../context/HeroContext';
+import { useHeroContext } from '../context/HeroContext';
 import { useAudio } from '../context/AudioContext';
 import { Link } from 'react-router-dom';
 
@@ -9,7 +9,7 @@ interface BattleResult {
 }
 
 export default function Battle() {
-  const { heroes } = useHero();
+  const { heroes } = useHeroContext();
   const { isMuted } = useAudio();
   const [hero1, setHero1] = useState<string | null>(null);
   const [hero2, setHero2] = useState<string | null>(null);

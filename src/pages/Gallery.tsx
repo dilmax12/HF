@@ -1,43 +1,39 @@
-import { useHero } from '../context/HeroContext';
 import { Link } from 'react-router-dom';
+import { useHeroContext } from '../context/HeroContext';
 
 export default function Gallery() {
-  const { heroes, deleteHero } = useHero();
-
-  console.log('Heróis na galeria:', heroes); // Log para depuração
+  const { heroes, deleteHero } = useHeroContext();
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold text-medieval-gold mb-4">Galeria de Heróis</h1>
+    <div className="container mx-auto p-4 text-parchment">
+      <h1 className="text-3xl font-cinzel text-center mb-6 text-medieval-gold">Galeria de Heróis</h1>
       {heroes.length === 0 ? (
-        <p className="text-medieval-gold">Nenhum herói criado ainda.</p>
+        <p className="text-center text-medieval-gold">
+          Nenhum herói criado ainda. Crie um em{' '}
+          <Link to="/create-hero" className="underline hover:text-yellow-300">
+            Criar Herói
+          </Link>
+          !
+        </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {heroes.map((hero) => (
-            <div key={hero.id} className="p-4 bg-medieval-dark border border-medieval-gold rounded">
-              {hero.image && (
-                <img src={hero.image} alt={hero.name} className="w-full h-48 object-cover mb-2" />
-              )}
-              <h2 className="text-xl text-medieval-gold">{hero.name || 'Sem nome'}</h2>
-              <p>Classe: {hero.class || 'Desconhecida'}</p>
-              <p>Força: {hero.attributes?.strength ?? 'N/A'}</p>
-              <p>Destreza: {hero.attributes?.dexterity ?? 'N/A'}</p>
-              <p>Inteligência: {hero.attributes?.intelligence ?? 'N/A'}</p>
-              <p>Constituição: {hero.attributes?.constitution ?? 'N/A'}</p>
-              <div className="mt-2 space-x-2">
-                <Link
-                  to={`/hero/${hero.id}`}
-                  className="px-2 py-1 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
-                >
-                  Detalhes
-                </Link>
-                <button
-                  onClick={() => confirm('Excluir herói?') && deleteHero(hero.id)}
-                  className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                  Excluir
-                </button>
-              </div>
+            <div key={hero.id} className="bg-medieval-dark p-4 rounded-lg shadow-lg border border-medieval-gold">
+              <h2 className="text-xl font-cinzel text-medieval-gold">{hero.name}</h2>
+              <p className="text-medieval-gold">Classe: {hero.class}</p>
+              <p className="text-medieval-gold">Nível: {hero.level || 1}</p>
+              <Link
+                to={`/hero/${hero.id}`}
+                className="text-yellow-300 hover:text-yellow-500 font-cinzel underline"
+              >
+                Ver Detalhes
+              </Link>
+              <button
+                onClick={() => deleteHero(hero.id)}
+                className="ml-4 text-red-400 hover:text-red-600 font-cinzel"
+              >
+                Excluir
+              </button>
             </div>
           ))}
         </div>

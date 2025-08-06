@@ -32,15 +32,7 @@ export default function ParticlesBackground() {
           modes: { repulse: { distance: 100 } },
         },
       }}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: -1, // Garante que fica atrás de tudo
-        pointerEvents: 'none', // Impede que capture cliques
-      }}
+      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1, pointerEvents: 'none' }}
     />
   );
 }
