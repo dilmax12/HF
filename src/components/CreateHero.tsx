@@ -5,13 +5,18 @@ import { useAudio } from '../context/AudioContext';
 import { useMissionContext } from '../context/MissionContext';
 import { motion } from 'framer-motion';
 import { generateStory } from '../utils/storyGenerator';
+import { fantasyNames } from '../utils/names';
 
 interface HeroForm {
   name: string;
+  race: string;
   class: string;
   attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
   story: string;
   image: string;
+  alignment: string;
+  objective: string;
+  battleCry: string;
 }
 
 export default function CreateHero() {
@@ -22,16 +27,23 @@ export default function CreateHero() {
   const [audioStarted, setAudioStarted] = useState(false);
   const [formData, setFormData] = useState<HeroForm>({
     name: '',
+    race: 'Humano',
     class: 'Guerreiro',
     attributes: { strength: 5, dexterity: 5, intelligence: 4, constitution: 4 },
     story: '',
     image: '/images/default-hero.png',
+    alignment: 'Ordeiro e Bom',
+    objective: 'Justiça',
+    battleCry: '',
   });
+  const [totalPoints, setTotalPoints] = useState(18);
   const [error, setError] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const generateRandomName = () => {
-    const names = ['Aragorn', 'Eldrin', 'Lyria', 'Thorin', 'Seraphina', 'Grok'];
-    const randomName = names[Math.floor(Math.random() * names.length)];
+    const raceNames = fantasyNames[formData.race];
+    const gender = Math.random() > 0.5 ? 'Masculinos' : 'Femininos';
+    const randomName = raceNames[gender][Math.floor(Math.random() * raceNames[gender].length)];
     setFormData((prev) => ({ ...prev, name: randomName }));
   };
 
@@ -40,22 +52,62 @@ export default function CreateHero() {
     setFormData((prev) => ({ ...prev, story }));
   };
 
+  const generateRandomBattleCry = (className: string): string => {
+    const cries: { [key: string]: string[] } = {
+      Guerreiro: ['"Pelo honor, caio ou venço!"', '"Meu escudo é minha alma!"'],
+      Arqueiro: ['"A flecha encontra seu alvo!"', '"Silêncio antes do disparo!"'],
+      Mago: ['"O fogo da mente queima!"', '"Arcanos, obedeçam-me!"'],
+      Clérigo: ['"Pela luz, sou redimido!"', '"A fé guia meu golpe!"'],
+      Ladino: ['"Das sombras, a lâmina!"', '"Surpresa é minha arma!"'],
+      Bárbaro: ['"Rugido da fúria!"', '"Sangue e glória!"'],
+      Druida: ['"A natureza me defende!"', '"Florestas, erguei-vos!"'],
+      Cavaleiro: ['"Pela ordem, avanço!"', '"Meu juramento é minha força!"'],
+      Feiticeiro: ['"O sangue queima em poder!"', '"Caos, meu aliado!"'],
+    };
+    const classCries = cries[className] || cries['Guerreiro'];
+    return classCries[Math.floor(Math.random() * classCries.length)];
+  };
+
   useEffect(() => {
     let isMounted = true;
-    if (!isMuted && !audioStarted && isMounted) {
-      const ambientAudio = registerAudio('ambient');
-      ambientAudio.loop = true;
-      ambientAudio.volume = isMuted ? 0 : volume;
-      ambientAudio.play().catch((e) => console.error('Erro ao tocar som ambiente:', e));
-      setAudioStarted(true);
-    }
     return () => {
       isMounted = false;
       if (audioStarted) {
         unregisterAudio('ambient');
       }
     };
-  }, [isMuted, volume, audioStarted, registerAudio, unregisterAudio]);
+  }, [audioStarted, unregisterAudio]);
+
+  const startAmbientAudio = () => {
+    if (!audioStarted && !isMuted) {
+      const ambientAudio = registerAudio('ambient');
+      ambientAudio.loop = true;
+      ambientAudio.volume = volume;
+      ambientAudio.play().catch((e) => console.error('Erro ao tocar som ambiente após interação:', e));
+      setAudioStarted(true);
+    }
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+        setFormData((prev) => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAttributeChange = (attr: keyof HeroForm['attributes'], value: number) => {
+    const newAttrs = { ...formData.attributes, [attr]: Math.max(1, Math.min(10, value)) };
+    const newTotal = Object.values(newAttrs).reduce((sum, val) => sum + val, 0);
+    if (newTotal <= 18) {
+      setFormData((prev) => ({ ...prev, attributes: newAttrs }));
+      setTotalPoints(newTotal);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,22 +127,26 @@ export default function CreateHero() {
       return;
     }
 
-    addHero({ ...formData, level: 1, xp: 0 });
+    addHero({ ...formData, level: 1, xp: 0, image: formData.image || '/images/default-hero.png' });
     completeMission(missions.find((m) => m.description === 'Crie seu primeiro herói')?.id || '');
     navigate('/gallery');
-  };
-
-  const updateAttribute = (attr: keyof HeroForm['attributes'], value: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      attributes: { ...prev.attributes, [attr]: Math.max(1, Math.min(10, value)) },
-    }));
-    setError('');
   };
 
   return (
     <div className="container mx-auto p-4 text-parchment">
       <h1 className="text-3xl font-cinzel text-medieval-gold text-center mb-6">Criar Herói</h1>
+      {!audioStarted && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={startAmbientAudio}
+          className="block mx-auto mb-4 px-6 py-3 bg-medieval-gold text-medieval-dark rounded-lg hover:bg-yellow-600 font-cinzel"
+        >
+          Iniciar Experiência com Som
+        </motion.button>
+      )}
       <motion.form
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -120,17 +176,88 @@ export default function CreateHero() {
           </div>
         </div>
         <div className="mb-4">
-          <label className="block text-medieval-gold mb-2">Classe</label>
+          <label className="block text-medieval-gold mb-2">Raça (Origem)</label>
+          <select
+            value={formData.race}
+            onChange={(e) => setFormData((prev) => ({ ...prev, race: e.target.value }))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+          >
+            {Object.keys(fantasyNames).map((race) => (
+              <option key={race} value={race}>
+                {race}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Classe (Profissão)</label>
           <select
             value={formData.class}
             onChange={(e) => setFormData((prev) => ({ ...prev, class: e.target.value }))}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
           >
-            <option value="Guerreiro">Guerreiro</option>
-            <option value="Mago">Mago</option>
-            <option value="Arqueiro">Arqueiro</option>
-            <option value="Clérigo">Clérigo</option>
+            {['Guerreiro', 'Arqueiro', 'Mago', 'Clérigo', 'Ladino', 'Bárbaro', 'Druida', 'Cavaleiro', 'Feiticeiro'].map((cls) => (
+              <option key={cls} value={cls}>
+                {cls}
+              </option>
+            ))}
           </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Alinhamento</label>
+          <select
+            value={formData.alignment}
+            onChange={(e) => setFormData((prev) => ({ ...prev, alignment: e.target.value }))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+            title="Escolha um alinhamento que reflita a moral e as ações do herói."
+          >
+            {[
+              'Ordeiro e Bom', 'Neutro e Bom', 'Caótico e Bom',
+              'Ordeiro e Neutro', 'Neutro Verdadeiro', 'Caótico e Neutro',
+              'Ordeiro e Mau', 'Neutro e Mau', 'Caótico e Mau',
+            ].map((align) => (
+              <option key={align} value={align}>
+                {align}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Objetivo</label>
+          <select
+            value={formData.objective}
+            onChange={(e) => setFormData((prev) => ({ ...prev, objective: e.target.value }))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+            title="Defina o que move o herói em sua jornada."
+          >
+            {[
+              'Riqueza', 'Justiça', 'Vingança', 'Redenção',
+              'Glória', 'Conhecimento', 'Liberdade', 'Caos', 'Equilíbrio',
+            ].map((obj) => (
+              <option key={obj} value={obj}>
+                {obj}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Frase de Batalha</label>
+          <input
+            type="text"
+            value={formData.battleCry}
+            onChange={(e) => setFormData((prev) => ({ ...prev, battleCry: e.target.value }))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+            placeholder="Digite ou gere uma frase"
+          />
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            type="button"
+            onClick={() => setFormData((prev) => ({ ...prev, battleCry: generateRandomBattleCry(prev.class) }))}
+            className="mt-2 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
+          >
+            Gerar Aleatória
+          </motion.button>
         </div>
         <div className="mb-4">
           <label className="block text-medieval-gold mb-2">Atributos (18 pontos totais, mínimo 1 por atributo)</label>
@@ -140,7 +267,7 @@ export default function CreateHero() {
               <input
                 type="number"
                 value={formData.attributes[attr as keyof HeroForm['attributes']]}
-                onChange={(e) => updateAttribute(attr as keyof HeroForm['attributes'], Number(e.target.value))}
+                onChange={(e) => handleAttributeChange(attr as keyof HeroForm['attributes'], Number(e.target.value))}
                 className="w-20 p-2 bg-gray-800 border border-medieval-gold rounded"
                 min="1"
                 max="10"
@@ -148,7 +275,7 @@ export default function CreateHero() {
             </div>
           ))}
           <p className="text-sm text-parchment">
-            Total de pontos: {Object.values(formData.attributes).reduce((sum, val) => sum + val, 0)}/18
+            Total de pontos: {totalPoints}/18
           </p>
         </div>
         <div className="mb-4">
@@ -173,185 +300,24 @@ export default function CreateHero() {
         <div className="mb-4">
           <label className="block text-medieval-gold mb-2">Imagem</label>
           <input
-            type="text"
-            value={formData.image}
-            onChange={(e) => setFormData((prev) => ({ ...prev, image: e.target.value }))}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
-            placeholder="URL da imagem ou use padrão"
           />
+          {imagePreview && <img src={imagePreview} alt="Prévia" className="mt-2 w-32 h-32 object-cover rounded" />}
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           type="submit"
-          className="w-full px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600 font-cinzel"
+          disabled={totalPoints !== 18}
+          className="w-full px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600 font-cinzel disabled:opacity-50"
         >
           Criar Herói
         </motion.button>
-      </motion.form>import React, { useState } from 'react';
-import { useHeroContext } from '../context/HeroContext';
-import { useNavigate } from 'react-router-dom';
-
-const CreateHero: React.FC = () => {
-  const { addHero } = useHeroContext();
-  const navigate = useNavigate();
-  const [hero, setHero] = useState({
-    name: '',
-    class: 'Guerreiro',
-    attributes: { strength: 0, dexterity: 0, intelligence: 0, constitution: 0 },
-    story: '',
-    image: '',
-    alignment: 'Leal e Bom',
-    objective: 'Justiça',
-    battleCry: '',
-  });
-  const [totalPoints, setTotalPoints] = useState(0);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        setHero({ ...hero, image: reader.result as string });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAttributeChange = (attr: string, value: number) => {
-    const newAttrs = { ...hero.attributes, [attr]: value };
-    const newTotal = Object.values(newAttrs).reduce((sum, val) => sum + val, 0);
-    if (newTotal <= 18) {
-      setHero({ ...hero, attributes: newAttrs });
-      setTotalPoints(newTotal);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      addHero({ ...hero, image: hero.image || '/images/default-hero.png' });
-      navigate('/gallery');
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-
-  return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-cinzel text-medieval-gold mb-4">Forjar um Herói</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-medieval-gold">Nome</label>
-          <input
-            type="text"
-            value={hero.name}
-            onChange={(e) => setHero({ ...hero, name: e.target.value })}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Classe</label>
-          <select
-            value={hero.class}
-            onChange={(e) => setHero({ ...hero, class: e.target.value })}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-          >
-            {['Guerreiro', 'Arqueiro', 'Mago', 'Clérigo', 'Ladino', 'Bárbaro', 'Druida', 'Cavaleiro', 'Feiticeiro'].map((cls) => (
-              <option key={cls} value={cls}>
-                {cls}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Alinhamento</label>
-          <select
-            value={hero.alignment}
-            onChange={(e) => setHero({ ...hero, alignment: e.target.value })}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-          >
-            {['Leal e Bom', 'Caótico'].map((align) => (
-              <option key={align} value={align}>
-                {align}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Objetivo</label>
-          <select
-            value={hero.objective}
-            onChange={(e) => setHero({ ...hero, objective: e.target.value })}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-          >
-            {['Busca por Poder', 'Riqueza', 'Justiça'].map((obj) => (
-              <option key={obj} value={obj}>
-                {obj}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Frase de Batalha</label>
-          <input
-            type="text"
-            value={hero.battleCry}
-            onChange={(e) => setHero({ ...hero, battleCry: e.target.value })}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-            placeholder="Digite ou gere uma frase"
-          />
-          <button
-            type="button"
-            onClick={() => setHero({ ...hero, battleCry: generateRandomBattleCry(hero.class) })}
-            className="mt-2 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
-          >
-            Gerar Aleatória
-          </button>
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Atributos (Total: {totalPoints}/18)</label>
-          {['strength', 'dexterity', 'intelligence', 'constitution'].map((attr) => (
-            <div key={attr} className="flex items-center mb-2">
-              <label className="mr-2 capitalize">{attr}: </label>
-              <input
-                type="number"
-                min="0"
-                max={18 - (totalPoints - hero.attributes[attr as keyof typeof hero.attributes])}
-                value={hero.attributes[attr as keyof typeof hero.attributes]}
-                onChange={(e) => handleAttributeChange(attr, parseInt(e.target.value) || 0)}
-                className="w-16 p-1 bg-medieval-dark border border-medieval-gold rounded"
-              />
-            </div>
-          ))}
-        </div>
-        <div>
-          <label className="block text-medieval-gold">Imagem</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="w-full p-2 bg-medieval-dark border border-medieval-gold rounded"
-          />
-          {imagePreview && <img src={imagePreview} alt="Prévia" className="mt-2 w-32 h-32 object-cover rounded" />}
-        </div>
-        <button
-          type="submit"
-          disabled={totalPoints !== 18}
-          className="px-6 py-3 bg-medieval-gold text-medieval-dark rounded-lg hover:bg-yellow-600 disabled:opacity-50 font-cinzel"
-        >
-          Criar Herói
-        </button>
-      </form>
-    </div>
-  );
-};
-
-export default CreateHero;
+      </motion.form>
     </div>
   );
 }
