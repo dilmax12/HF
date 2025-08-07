@@ -6,6 +6,32 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
+import type { Engine } from 'tsparticles-engine';
+import type { IOptions, MoveDirection } from 'tsparticles-engine';
+
+interface Hero {
+  id: string;
+  name: string;
+  race: string;
+  class: string;
+  attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
+  story?: string;
+  image: string;
+  level: number;
+  xp?: number;
+  mana?: number;
+  skills?: { name: string; cost: number }[];
+  alignment: string;
+  objective: string;
+  battleCry: string;
+}
+
+interface Mission {
+  id: string;
+  description: string;
+  reward: number;
+  completed?: boolean;
+}
 
 export default function Battle() {
   const { heroes, updateHero } = useHeroContext();
@@ -24,18 +50,18 @@ export default function Battle() {
   const isBattleRunning = useRef(false);
 
   // Inicializar partículas
-  const particlesInit = async (engine: any) => {
+  const particlesInit = async (engine: Engine) => {
     await loadSlim(engine);
   };
 
-  const particlesOptions = {
+  const particlesOptions: IOptions = {
     particles: {
       number: { value: 20, density: { enable: true, value_area: 800 } },
       color: { value: '#ffd700' },
       shape: { type: 'star', stroke: { width: 0, color: '#000000' } },
       opacity: { value: 0.8, random: true },
       size: { value: 5, random: true },
-      move: { enable: true, speed: 6, direction: 'none', random: true, out_mode: 'out' },
+      move: { enable: true, speed: 6, direction: 'none' as MoveDirection, random: true, out_mode: 'out' },
     },
     interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
   };
@@ -59,12 +85,12 @@ export default function Battle() {
   useEffect(() => {
     if (hero1 && hero2 && generateMission && heroes.length > 0) {
       const h1 = heroes.find((h) => h.id === hero1);
-      if (h1) generateMission(h1);
+      if (h1) generateMission(); // Removido argumento, corrigindo TS2339
     }
   }, [hero1, hero2, heroes.length, generateMission]);
 
   // Lógica de uso de habilidades
-  const useSkill = (heroId: string, skillIndex: number) => {
+  const useSkill = (heroId: string, skillIndex: number): number => {
     const hero = heroes.find((h) => h.id === heroId);
     if (!hero || !hero.skills || skillIndex < 0 || skillIndex >= hero.skills.length) return 0;
 
@@ -145,7 +171,7 @@ export default function Battle() {
         updateHero(updatedHeroes.find((h) => h.id === winner.id)!);
 
         const activeMission = missions.find((m) => !m.completed);
-        if (activeMission) {
+        if (activeMission && activeMission.reward) { // Correção para TS18048
           const winnerAttr = winner.attributes;
           const meetsRequirement = activeMission.description.includes('força')
             ? winnerAttr.strength > parseInt(activeMission.description.split('>')[1])

@@ -1,9 +1,11 @@
 import { useCallback } from 'react';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
+import type { Engine } from 'tsparticles-engine';
+import type { IOptions, MoveDirection } from 'tsparticles-engine';
 
 export default function ParticlesBackground() {
-  const particlesInit = useCallback(async (engine) => {
+  const particlesInit = useCallback(async (engine: Engine) => {
     await loadSlim(engine);
   }, []);
 
@@ -24,7 +26,7 @@ export default function ParticlesBackground() {
           shape: { type: 'circle' },
           opacity: { value: 0.5 },
           size: { value: 3 },
-          move: { enable: true, speed: 2 },
+          move: { enable: true, speed: 2, direction: 'top' as MoveDirection }, // Ajustado direction
         },
         interactivity: {
           detectsOn: 'canvas',

@@ -14,8 +14,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true, // Adicionado para resolver TS5097
+    "types": ["react", "vite"] // Opcional: melhora a tipagem de bibliotecas
   },
-  "include": ["src"],
+  "include": ["src/**/*"], // Expandido para incluir todos os arquivos em src
   "references": []
 }

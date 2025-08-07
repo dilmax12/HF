@@ -1,101 +1,99 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useHeroContext } from '../context/HeroContext';
-import { useAudio } from '../context/AudioContext';
-import { useMissionContext } from '../context/MissionContext';
+import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { generateStory } from '../utils/storyGenerator';
 
-interface HeroForm {
+interface Hero {
+  id: string;
   name: string;
+  race: string;
   class: string;
   attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
   story: string;
   image: string;
   level: number;
   xp: number;
+  mana: number;
+  skills: string[];
+  alignment: string;
+  objective: string;
+  battleCry: string;
+}
+
+interface HeroForm {
+  id: string;
+  name: string;
+  race: string;
+  class: string;
+  attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
+  story: string;
+  image: string;
+  alignment: string;
+  objective: string;
+  battleCry: string;
 }
 
 export default function EditHero() {
+  const { heroes, updateHero } = useHeroContext();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { heroes, updateHero } = useHeroContext();
-  const { isMuted, volume, registerAudio, unregisterAudio } = useAudio();
-  const { completeMission, missions } = useMissionContext();
-  const [audioStarted, setAudioStarted] = useState(false);
-  const [formData, setFormData] = useState<HeroForm | null>(null);
-  const [error, setError] = useState('');
+  const [heroForm, setHeroForm] = useState<HeroForm | null>(null);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const hero = heroes.find((h) => h.id === id);
     if (hero) {
-      setFormData({
-        ...hero,
-        attributes: hero.attributes || { strength: 5, dexterity: 5, intelligence: 4, constitution: 4 }, // Garante atributos padrão
-        level: hero.level || 1,
-        xp: hero.xp || 0,
+      setHeroForm({
+        id: hero.id,
+        name: hero.name,
+        race: hero.race,
+        class: hero.class,
+        attributes: { ...hero.attributes },
+        story: hero.story,
+        image: hero.image,
+        alignment: hero.alignment,
+        objective: hero.objective,
+        battleCry: hero.battleCry,
       });
-    } else {
-      navigate('/gallery');
     }
-  }, [id, heroes, navigate]);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (!isMuted && !audioStarted && isMounted) {
-      const ambientAudio = registerAudio('ambient');
-      ambientAudio.loop = true;
-      ambientAudio.volume = isMuted ? 0 : volume;
-      ambientAudio.play().catch((e) => console.error('Erro ao tocar som ambiente:', e));
-      setAudioStarted(true);
-    }
-    return () => {
-      isMounted = false;
-      if (audioStarted) {
-        unregisterAudio('ambient');
-      }
-    };
-  }, [isMuted, volume, audioStarted, registerAudio, unregisterAudio]);
-
-  const generateHeroStory = () => {
-    if (formData) {
-      const story = generateStory(formData.name, formData.class, formData.attributes);
-      setFormData((prev) => prev ? { ...prev, story } : prev);
-    }
-  };
+  }, [id, heroes]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData) return;
-    const { name, attributes } = formData;
-    const totalPoints = attributes.strength + attributes.dexterity + attributes.intelligence + attributes.constitution;
+    if (!heroForm) return;
 
-    if (!name) {
-      setError('O nome é obrigatório!');
-      return;
-    }
+    const totalPoints = heroForm.attributes.strength + heroForm.attributes.dexterity + heroForm.attributes.intelligence + heroForm.attributes.constitution;
     if (totalPoints !== 18) {
       setError('Os atributos devem somar exatamente 18 pontos!');
       return;
     }
-    if (Object.values(attributes).some((attr) => attr < 1 || attr > 10)) {
+    if (Object.values(heroForm.attributes).some((attr) => attr < 1 || attr > 10)) {
       setError('Cada atributo deve ter entre 1 e 10 pontos!');
       return;
     }
 
-    updateHero({ ...formData, id: id! });
-    completeMission(missions.find((m) => m.description === 'Edite um herói na galeria')?.id || '');
+    const updatedHero: Hero = {
+      ...heroForm,
+      level: heroes.find((h) => h.id === heroForm.id)?.level || 1,
+      xp: heroes.find((h) => h.id === heroForm.id)?.xp || 0,
+      mana: heroes.find((h) => h.id === heroForm.id)?.mana || 10,
+      skills: heroes.find((h) => h.id === heroForm.id)?.skills || [],
+    };
+    updateHero(updatedHero);
     navigate('/gallery');
   };
 
-  const updateAttribute = (attr: keyof HeroForm['attributes'], value: number) => {
-    setFormData((prev) =>
-      prev ? { ...prev, attributes: { ...prev.attributes, [attr]: Math.max(1, Math.min(10, value)) } } : prev
-    );
-    setError('');
+  const handleAttributeChange = (attr: keyof HeroForm['attributes'], value: number) => {
+    if (heroForm) {
+      const newAttrs = { ...heroForm.attributes, [attr]: Math.max(1, Math.min(10, value)) };
+      const newTotal = Object.values(newAttrs).reduce((sum, val) => sum + val, 0);
+      if (newTotal <= 18) {
+        setHeroForm((prev) => (prev ? { ...prev, attributes: newAttrs } : null));
+      }
+    }
   };
 
-  if (!formData) return null;
+  if (!heroForm) return <div>Carregando...</div>;
 
   return (
     <div className="container mx-auto p-4 text-parchment">
@@ -111,71 +109,88 @@ export default function EditHero() {
           <label className="block text-medieval-gold mb-2">Nome</label>
           <input
             type="text"
-            value={formData.name}
-            onChange={(e) => setFormData((prev) => prev ? { ...prev, name: e.target.value } : prev)}
+            value={heroForm.name}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, name: e.target.value } : null))}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
-            placeholder="Digite o nome do herói"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Raça</label>
+          <input
+            type="text"
+            value={heroForm.race}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, race: e.target.value } : null))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
           />
         </div>
         <div className="mb-4">
           <label className="block text-medieval-gold mb-2">Classe</label>
-          <select
-            value={formData.class}
-            onChange={(e) => setFormData((prev) => prev ? { ...prev, class: e.target.value } : prev)}
+          <input
+            type="text"
+            value={heroForm.class}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, class: e.target.value } : null))}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
-          >
-            <option value="Guerreiro">Guerreiro</option>
-            <option value="Mago">Mago</option>
-            <option value="Arqueiro">Arqueiro</option>
-            <option value="Clérigo">Clérigo</option>
-          </select>
+          />
         </div>
         <div className="mb-4">
-          <label className="block text-medieval-gold mb-2">Atributos (18 pontos totais, mínimo 1 por atributo)</label>
+          <label className="block text-medieval-gold mb-2">Atributos (18 pontos totais)</label>
           {['strength', 'dexterity', 'intelligence', 'constitution'].map((attr) => (
             <div key={attr} className="flex items-center mb-2">
               <span className="w-32 text-parchment capitalize">{attr}:</span>
               <input
                 type="number"
-                value={formData.attributes[attr as keyof HeroForm['attributes']]}
-                onChange={(e) => updateAttribute(attr as keyof HeroForm['attributes'], Number(e.target.value))}
+                value={heroForm.attributes[attr as keyof HeroForm['attributes']]}
+                onChange={(e) => handleAttributeChange(attr as keyof HeroForm['attributes'], Number(e.target.value))}
                 className="w-20 p-2 bg-gray-800 border border-medieval-gold rounded"
                 min="1"
                 max="10"
               />
             </div>
           ))}
-          <p className="text-sm text-parchment">
-            Total de pontos: {Object.values(formData.attributes).reduce((sum, val) => sum + val, 0)}/18
-          </p>
         </div>
         <div className="mb-4">
           <label className="block text-medieval-gold mb-2">História</label>
           <textarea
-            value={formData.story}
-            onChange={(e) => setFormData((prev) => prev ? { ...prev, story: e.target.value } : prev)}
+            value={heroForm.story}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, story: e.target.value } : null))}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
             rows={4}
-            placeholder="Escreva a história do herói"
           />
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            type="button"
-            onClick={generateHeroStory}
-            className="mt-2 px-4 py-2 bg-medieval-gold text-medieval-dark rounded hover:bg-yellow-600"
-          >
-            Gerar História
-          </motion.button>
         </div>
         <div className="mb-4">
           <label className="block text-medieval-gold mb-2">Imagem</label>
           <input
             type="text"
-            value={formData.image}
-            onChange={(e) => setFormData((prev) => prev ? { ...prev, image: e.target.value } : prev)}
+            value={heroForm.image}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, image: e.target.value } : null))}
             className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
-            placeholder="URL da imagem ou use padrão"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Alinhamento</label>
+          <input
+            type="text"
+            value={heroForm.alignment}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, alignment: e.target.value } : null))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Objetivo</label>
+          <input
+            type="text"
+            value={heroForm.objective}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, objective: e.target.value } : null))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-medieval-gold mb-2">Frase de Batalha</label>
+          <input
+            type="text"
+            value={heroForm.battleCry}
+            onChange={(e) => setHeroForm((prev) => (prev ? { ...prev, battleCry: e.target.value } : null))}
+            className="w-full p-2 bg-gray-800 border border-medieval-gold rounded"
           />
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}

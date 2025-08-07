@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
+import type { Engine } from 'tsparticles-engine';
+import type { IOptions, MoveDirection } from 'tsparticles-engine';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -14,18 +16,18 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, [navigate]);
 
-  const particlesInit = async (engine: any) => {
+  const particlesInit = async (engine: Engine) => {
     await loadSlim(engine);
   };
 
-  const particlesOptions = {
+  const particlesOptions: IOptions = {
     particles: {
       number: { value: 50, density: { enable: true, value_area: 800 } },
       color: { value: '#ffd700' },
       shape: { type: 'circle' },
       opacity: { value: 0.5, random: true },
       size: { value: 3, random: true },
-      move: { enable: true, speed: 2, direction: 'none', random: true, out_mode: 'out' },
+      move: { enable: true, speed: 2, direction: 'none' as MoveDirection, random: true, out_mode: 'out' },
     },
     interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
   };

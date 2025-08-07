@@ -1,68 +1,71 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useHeroContext } from '../context/HeroContext';
+import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 interface Hero {
   id: string;
   name: string;
+  race: string;
   class: string;
   attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
-  story?: string;
+  story: string;
   image: string;
+  level: number;
+  xp: number;
+  mana: number;
+  skills: string[];
   alignment: string;
   objective: string;
   battleCry: string;
 }
 
-interface HeroStoryProps {
-  hero: Hero;
-}
-
-const HeroStory: React.FC<HeroStoryProps> = ({ hero }) => {
-  const { updateHero } = useHeroContext();
-  const [story, setStory] = useState<string | null>(hero.story || null);
-  const [isLoading, setIsLoading] = useState<boolean>(!hero.story);
+export default function HeroStory() {
+  const { heroes } = useHeroContext();
+  const { id } = useParams<{ id: string }>();
+  const [hero, setHero] = useState<Hero | null>(null);
 
   useEffect(() => {
-    const generateStory = async () => {
-      if (hero.story || !hero.name) return; // Evita geração se já houver história ou nome inválido
-      setIsLoading(true);
-      try {
-        const prompt = `Crie uma história épica de fantasia medieval para um herói chamado ${hero.name}, da classe ${hero.class}. 
-        Ele tem os seguintes atributos: força ${hero.attributes.strength}, inteligência ${hero.attributes.intelligence} e agilidade ${hero.attributes.dexterity}. 
-        Descreva um momento importante da vida desse herói, com linguagem envolvente e tom mítico.`;
-        const response = await (window as any).puter.ai.chat(prompt, {
-          model: 'x-ai/grok-4',
-          stream: true,
-        });
-        let fullStory = '';
-        for await (const part of response) {
-          fullStory += part.text;
-        }
-        setStory(fullStory);
-        updateHero({ ...hero, story: fullStory });
-      } catch (error) {
-        console.error('Erro ao gerar história:', error);
-        setStory('Falha ao gerar a história. Tente novamente mais tarde.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    const selectedHero = heroes.find((h) => h.id === id);
+    if (selectedHero) {
+      setHero(selectedHero);
+    }
+  }, [id, heroes]);
 
-    generateStory();
-  }, [hero, updateHero]);
+  if (!hero) return <div>Carregando...</div>;
 
   return (
-    <div className="p-4 bg-medieval-dark rounded-lg border border-medieval-gold">
-      <h2 className="text-2xl font-cinzel text-medieval-gold mb-4">Crônica de {hero.name}</h2>
-      {isLoading ? (
-        <p className="text-parchment animate-pulse">Tecendo a lenda...</p>
-      ) : story ? (
-        <p className="text-parchment whitespace-pre-wrap">{story}</p>
-      ) : (
-        <p className="text-parchment">Nenhuma história gerada ainda.</p>
-      )}
+    <div className="container mx-auto p-4 text-parchment">
+      <h1 className="text-3xl font-cinzel text-medieval-gold text-center mb-6">História de {hero.name}</h1>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-2xl mx-auto bg-medieval-dark p-6 rounded-lg border border-medieval-gold"
+      >
+        <img
+          src={hero.image}
+          alt={hero.name}
+          className="w-32 h-32 object-cover rounded-lg border border-medieval-gold mx-auto mb-4"
+        />
+        <p className="text-medieval-gold mb-2"><strong>Nome:</strong> {hero.name}</p>
+        <p className="text-medieval-gold mb-2"><strong>Raça:</strong> {hero.race}</p>
+        <p className="text-medieval-gold mb-2"><strong>Classe:</strong> {hero.class}</p>
+        <p className="text-medieval-gold mb-2"><strong>Nível:</strong> {hero.level}</p>
+        <p className="text-medieval-gold mb-2"><strong>XP:</strong> {hero.xp}</p>
+        <p className="text-medieval-gold mb-2"><strong>Alinhamento:</strong> {hero.alignment}</p>
+        <p className="text-medieval-gold mb-2"><strong>Objetivo:</strong> {hero.objective}</p>
+        <p className="text-medieval-gold mb-2"><strong>Frase de Batalha:</strong> {hero.battleCry}</p>
+        <p className="text-medieval-gold mb-2"><strong>Atributos:</strong></p>
+        <ul className="list-disc pl-5 mb-4">
+          <li>Força: {hero.attributes.strength}</li>
+          <li>Destreza: {hero.attributes.dexterity}</li>
+          <li>Inteligência: {hero.attributes.intelligence}</li>
+          <li>Constituição: {hero.attributes.constitution}</li>
+        </ul>
+        <p className="text-medieval-gold"><strong>História:</strong></p>
+        <p className="mt-2">{hero.story}</p>
+      </motion.div>
     </div>
   );
-};
-
-export default HeroStory;
+}
