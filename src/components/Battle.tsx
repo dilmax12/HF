@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
-import type { IOptions, MoveDirection, IParticles, IShape, IOpacity, ISize, IMove, IInteractivity, IHoverEvent } from 'tsparticles-engine';
+import type { ISourceOptions } from 'tsparticles-engine'; // Ajustado para ISourceOptions
 
 interface Hero {
   id: string;
@@ -36,7 +36,7 @@ interface Mission {
 export default function Battle() {
   const { heroes, updateHero } = useHeroContext();
   const { isMuted, startAudio } = useAudio();
-  const { missions, generateMission } = useMissionContext();
+  const { missions, generateMission, completeMission } = useMissionContext();
   const [hero1, setHero1] = useState<string | null>(null);
   const [hero2, setHero2] = useState<string | null>(null);
   const [result, setResult] = useState<{ winner: string; log: string[] } | null>(null);
@@ -53,16 +53,18 @@ export default function Battle() {
     await loadSlim(engine);
   };
 
-  const particlesOptions: IOptions = {
+  const particlesOptions: ISourceOptions = {
     particles: {
-      number: { value: 20, density: { enable: true, value_area: 800 } } as IParticles,
+      number: { value: 20, density: { enable: true, value_area: 800 } },
       color: { value: '#ffd700' },
-      shape: { type: 'star', stroke: { width: 0, color: '#000000' } } as IShape,
-      opacity: { value: 0.8, random: true } as IOpacity,
-      size: { value: 5, random: true } as ISize,
-      move: { enable: true, speed: 6, direction: 'none' as MoveDirection, random: true, out_mode: 'out' } as IMove,
-    } as IParticles,
-    interactivity: { events: { onhover: { enable: false } as IHoverEvent, onclick: { enable: false } } } as IInteractivity,
+      shape: { type: 'star' },
+      opacity: { value: 0.8, random: true },
+      size: { value: 5, random: true },
+      move: { enable: true, speed: 6, direction: 'none', random: true, out_mode: 'out' },
+    },
+    interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
+    background: { color: { value: 'transparent' } },
+    autoPlay: true,
   };
 
   const startBattleSound = () => {

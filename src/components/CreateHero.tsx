@@ -19,6 +19,10 @@ interface HeroForm {
   battleCry: string;
 }
 
+interface FantasyNames {
+  [key: string]: { Masculinos: string[]; Femininos: string[] };
+}
+
 export default function CreateHero() {
   const navigate = useNavigate();
   const { addHero } = useHeroContext();
@@ -41,7 +45,7 @@ export default function CreateHero() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const generateRandomName = () => {
-    const raceNames = fantasyNames[formData.race];
+    const raceNames = (fantasyNames as FantasyNames)[formData.race];
     const gender = Math.random() > 0.5 ? 'Masculinos' : 'Femininos';
     const randomName = raceNames[gender][Math.floor(Math.random() * raceNames[gender].length)];
     setFormData((prev) => ({ ...prev, name: randomName }));

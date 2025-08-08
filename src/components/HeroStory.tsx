@@ -1,70 +1,66 @@
-import { useEffect, useState } from 'react';
-import { useHeroContext } from '../context/HeroContext';
-import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Particles from 'react-tsparticles';
+import { loadSlim } from 'tsparticles-slim';
+import type { Engine } from 'tsparticles-engine';
+import type { ISourceOptions } from 'tsparticles-engine';
 
-interface Hero {
-  id: string;
-  name: string;
-  race: string;
-  class: string;
-  attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
-  story: string;
-  image: string;
-  level: number;
-  xp: number;
-  mana: number;
-  skills: { name: string; cost: number }[];
-  alignment: string;
-  objective: string;
-  battleCry: string;
-}
-
-export default function HeroStory() {
-  const { heroes } = useHeroContext();
-  const { id } = useParams<{ id: string }>();
-  const [hero, setHero] = useState<Hero | null>(null);
+export default function SplashScreen() {
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const selectedHero = heroes.find((h) => h.id === id);
-    if (selectedHero) {
-      setHero(selectedHero);
-    }
-  }, [id, heroes]);
+    const timer = setTimeout(() => {
+      navigate('/gallery');
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
-  if (!hero) return <div>Carregando...</div>;
+  const particlesInit = async (engine: Engine) => {
+    await loadSlim(engine);
+  };
+
+  const particlesOptions: ISourceOptions = {
+    particles: {
+      number: { value: 50, density: { enable: true, value_area: 800 } },
+      color: { value: '#ffd700' },
+      shape: { type: 'circle' },
+      opacity: { value: 0.5, random: true },
+      size: { value: 3, random: true },
+      move: { enable: true, speed: 2, direction: 'none', random: true, out_mode: 'out' },
+    },
+    interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
+    background: { color: { value: 'transparent' } },
+    autoPlay: true,
+  };
 
   return (
-    <div className="container mx-auto p-4 text-parchment">
-      <h1 className="text-3xl font-cinzel text-medieval-gold text-center mb-6">História de {hero.name}</h1>
+    <div className="relative min-h-screen bg-medieval-dark flex items-center justify-center overflow-hidden">
+      <Particles id="tsparticles" options={particlesOptions} init={particlesInit} className="absolute inset-0" />
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-2xl mx-auto bg-medieval-dark p-6 rounded-lg border border-medieval-gold"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1 }}
+        className="text-center"
       >
-        <img
-          src={hero.image}
-          alt={hero.name}
-          className="w-32 h-32 object-cover rounded-lg border border-medieval-gold mx-auto mb-4"
+        <h1 className="text-5xl font-cinzel text-medieval-gold mb-8">Forjador de Heróis</h1>
+        <motion.img
+          src="/images/shield.png"
+          alt="Escudo"
+          className="w-32 h-32 mx-auto"
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 1 }}
         />
-        <p className="text-medieval-gold mb-2"><strong>Nome:</strong> {hero.name}</p>
-        <p className="text-medieval-gold mb-2"><strong>Raça:</strong> {hero.race}</p>
-        <p className="text-medieval-gold mb-2"><strong>Classe:</strong> {hero.class}</p>
-        <p className="text-medieval-gold mb-2"><strong>Nível:</strong> {hero.level}</p>
-        <p className="text-medieval-gold mb-2"><strong>XP:</strong> {hero.xp}</p>
-        <p className="text-medieval-gold mb-2"><strong>Alinhamento:</strong> {hero.alignment}</p>
-        <p className="text-medieval-gold mb-2"><strong>Objetivo:</strong> {hero.objective}</p>
-        <p className="text-medieval-gold mb-2"><strong>Frase de Batalha:</strong> {hero.battleCry}</p>
-        <p className="text-medieval-gold mb-2"><strong>Atributos:</strong></p>
-        <ul className="list-disc pl-5 mb-4">
-          <li>Força: {hero.attributes.strength}</li>
-          <li>Destreza: {hero.attributes.dexterity}</li>
-          <li>Inteligência: {hero.attributes.intelligence}</li>
-          <li>Constituição: {hero.attributes.constitution}</li>
-        </ul>
-        <p className="text-medieval-gold"><strong>História:</strong></p>
-        <p className="mt-2">{hero.story}</p>
+        <motion.img
+          src="/images/sword.png"
+          alt="Espada"
+          className="w-32 h-32 mx-auto mt-4"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+        />
+        <p className="text-parchment mt-4">Prepare-se para forjar lendas!</p>
       </motion.div>
     </div>
   );
