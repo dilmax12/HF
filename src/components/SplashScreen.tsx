@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
-import type { IOptions, MoveDirection } from 'tsparticles-engine';
+import type { IOptions, MoveDirection, IParticles, IShape, IOpacity, ISize, IMove, IInteractivity, IHoverEvent } from 'tsparticles-engine';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -22,14 +22,14 @@ export default function SplashScreen() {
 
   const particlesOptions: IOptions = {
     particles: {
-      number: { value: 50, density: { enable: true, value_area: 800 } },
+      number: { value: 50, density: { enable: true, value_area: 800 } } as IParticles,
       color: { value: '#ffd700' },
-      shape: { type: 'circle' },
-      opacity: { value: 0.5, random: true },
-      size: { value: 3, random: true },
-      move: { enable: true, speed: 2, direction: 'none' as MoveDirection, random: true, out_mode: 'out' },
-    },
-    interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
+      shape: { type: 'circle' } as IShape,
+      opacity: { value: 0.5, random: true } as IOpacity,
+      size: { value: 3, random: true } as ISize,
+      move: { enable: true, speed: 2, direction: 'none' as MoveDirection, random: true, out_mode: 'out' } as IMove,
+    } as IParticles,
+    interactivity: { events: { onhover: { enable: false } as IHoverEvent, onclick: { enable: false } } } as IInteractivity,
   };
 
   return (

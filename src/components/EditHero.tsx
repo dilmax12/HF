@@ -14,7 +14,7 @@ interface Hero {
   level: number;
   xp: number;
   mana: number;
-  skills: string[];
+  skills: { name: string; cost: number }[];
   alignment: string;
   objective: string;
   battleCry: string;

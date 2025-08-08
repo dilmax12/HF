@@ -127,7 +127,15 @@ export default function CreateHero() {
       return;
     }
 
-    addHero({ ...formData, level: 1, xp: 0, image: formData.image || '/images/default-hero.png' });
+    addHero({
+      ...formData,
+      id: Date.now().toString(),
+      level: 1,
+      xp: 0,
+      mana: 10,
+      skills: [{ name: 'Golpe Básico', cost: 0 }],
+      image: formData.image || '/images/default-hero.png',
+    });
     completeMission(missions.find((m) => m.description === 'Crie seu primeiro herói')?.id || '');
     navigate('/gallery');
   };

@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import Particles from 'react-tsparticles';
 import { loadSlim } from 'tsparticles-slim';
 import type { Engine } from 'tsparticles-engine';
-import type { IOptions, MoveDirection } from 'tsparticles-engine';
+import type { IOptions, MoveDirection, IParticles, IShape, IOpacity, ISize, IMove, IInteractivity, IHoverEvent } from 'tsparticles-engine';
 
 interface Hero {
   id: string;
@@ -15,12 +15,12 @@ interface Hero {
   race: string;
   class: string;
   attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
-  story?: string;
+  story: string;
   image: string;
   level: number;
   xp?: number;
   mana?: number;
-  skills?: { name: string; cost: number }[];
+  skills: { name: string; cost: number }[];
   alignment: string;
   objective: string;
   battleCry: string;
@@ -36,7 +36,7 @@ interface Mission {
 export default function Battle() {
   const { heroes, updateHero } = useHeroContext();
   const { isMuted, startAudio } = useAudio();
-  const { missions, generateMission, completeMission } = useMissionContext();
+  const { missions, generateMission } = useMissionContext();
   const [hero1, setHero1] = useState<string | null>(null);
   const [hero2, setHero2] = useState<string | null>(null);
   const [result, setResult] = useState<{ winner: string; log: string[] } | null>(null);
@@ -49,24 +49,22 @@ export default function Battle() {
   const [h2Mana, setH2Mana] = useState<number>(10);
   const isBattleRunning = useRef(false);
 
-  // Inicializar partículas
   const particlesInit = async (engine: Engine) => {
     await loadSlim(engine);
   };
 
   const particlesOptions: IOptions = {
     particles: {
-      number: { value: 20, density: { enable: true, value_area: 800 } },
+      number: { value: 20, density: { enable: true, value_area: 800 } } as IParticles,
       color: { value: '#ffd700' },
-      shape: { type: 'star', stroke: { width: 0, color: '#000000' } },
-      opacity: { value: 0.8, random: true },
-      size: { value: 5, random: true },
-      move: { enable: true, speed: 6, direction: 'none' as MoveDirection, random: true, out_mode: 'out' },
-    },
-    interactivity: { events: { onhover: { enable: false }, onclick: { enable: false } } },
+      shape: { type: 'star', stroke: { width: 0, color: '#000000' } } as IShape,
+      opacity: { value: 0.8, random: true } as IOpacity,
+      size: { value: 5, random: true } as ISize,
+      move: { enable: true, speed: 6, direction: 'none' as MoveDirection, random: true, out_mode: 'out' } as IMove,
+    } as IParticles,
+    interactivity: { events: { onhover: { enable: false } as IHoverEvent, onclick: { enable: false } } } as IInteractivity,
   };
 
-  // Gerenciar sons apenas com interação
   const startBattleSound = () => {
     if (!isMuted && !audioStarted) {
       startAudio('battle');
@@ -81,15 +79,13 @@ export default function Battle() {
     }
   };
 
-  // Gerar missão inicial ao carregar
   useEffect(() => {
     if (hero1 && hero2 && generateMission && heroes.length > 0) {
       const h1 = heroes.find((h) => h.id === hero1);
-      if (h1) generateMission(); // Removido argumento, corrigindo TS2339
+      if (h1) generateMission();
     }
   }, [hero1, hero2, heroes.length, generateMission]);
 
-  // Lógica de uso de habilidades
   const useSkill = (heroId: string, skillIndex: number): number => {
     const hero = heroes.find((h) => h.id === heroId);
     if (!hero || !hero.skills || skillIndex < 0 || skillIndex >= hero.skills.length) return 0;
@@ -98,17 +94,12 @@ export default function Battle() {
     const currentMana = heroId === hero1 ? h1Mana : h2Mana;
     if (currentMana < skill.cost) return 0;
 
-    // Definir função effect dinamicamente com base no nome da habilidade
     const getEffect = (skillName: string, h: Hero): number => {
       switch (skillName) {
-        case 'Golpe Feroz':
-          return h.attributes.strength * 2;
-        case 'Rajada Arcana':
-          return h.attributes.intelligence * 3;
-        case 'Tiro Preciso':
-          return h.attributes.dexterity * 1.5;
-        default:
-          return h.attributes.strength; // Fallback para ataque básico
+        case 'Golpe Feroz': return h.attributes.strength * 2;
+        case 'Rajada Arcana': return h.attributes.intelligence * 3;
+        case 'Tiro Preciso': return h.attributes.dexterity * 1.5;
+        default: return h.attributes.strength;
       }
     };
 
@@ -121,7 +112,6 @@ export default function Battle() {
     return damage;
   };
 
-  // Lógica de batalha
   const calculateBattle = () => {
     if (!hero1 || !hero2 || isBattleRunning.current) return;
 
@@ -171,7 +161,7 @@ export default function Battle() {
         updateHero(updatedHeroes.find((h) => h.id === winner.id)!);
 
         const activeMission = missions.find((m) => !m.completed);
-        if (activeMission && activeMission.reward) { // Correção para TS18048
+        if (activeMission?.reward) {
           const winnerAttr = winner.attributes;
           const meetsRequirement = activeMission.description.includes('força')
             ? winnerAttr.strength > parseInt(activeMission.description.split('>')[1])
@@ -199,8 +189,8 @@ export default function Battle() {
       const h1Crit = Math.random() < h1.attributes.dexterity / 100 ? 2 : 1;
       const h2Crit = Math.random() < h2.attributes.dexterity / 100 ? 2 : 1;
 
-      const useH1Skill = Math.random() < 0.3 && h1Mana >= (h1.skills?.[0]?.cost || 0);
-      const useH2Skill = Math.random() < 0.3 && h2Mana >= (h2.skills?.[0]?.cost || 0);
+      const useH1Skill = Math.random() < 0.3 && h1Mana >= (h1.skills[0]?.cost || 0);
+      const useH2Skill = Math.random() < 0.3 && h2Mana >= (h2.skills[0]?.cost || 0);
 
       if (!isMuted) {
         startAudio(useH1Skill || useH2Skill ? 'critical' : h1Crit > 1 || h2Crit > 1 ? 'critical' : 'attack');
@@ -211,7 +201,7 @@ export default function Battle() {
         if (skillDamage > 0) {
           tempH2Health -= skillDamage;
           setH2Health(tempH2Health);
-          log.push(`${h1.name} usa ${h1.skills![0].name} causando ${skillDamage} de dano a ${h2.name} (Mana: ${h1Mana - (h1.skills![0].cost || 0)})`);
+          log.push(`${h1.name} usa ${h1.skills[0].name} causando ${skillDamage} de dano a ${h2.name} (Mana: ${h1Mana - (h1.skills[0].cost || 0)})`);
         }
       } else if (Math.random() < h1HitChance) {
         const h1Damage = Math.max(1, Math.floor(h1.attributes.strength * (Math.random() * 0.5 + 0.5) * h1Crit * (1 + h1.attributes.intelligence / 20)));
@@ -229,7 +219,7 @@ export default function Battle() {
         if (skillDamage > 0) {
           tempH1Health -= skillDamage;
           setH1Health(tempH1Health);
-          log.push(`${h2.name} usa ${h2.skills![0].name} causando ${skillDamage} de dano a ${h1.name} (Mana: ${h2Mana - (h2.skills![0].cost || 0)})`);
+          log.push(`${h2.name} usa ${h2.skills[0].name} causando ${skillDamage} de dano a ${h1.name} (Mana: ${h2Mana - (h2.skills[0].cost || 0)})`);
         }
       } else if (tempH2Health > 0 && Math.random() < h2HitChance) {
         const h2Damage = Math.max(1, Math.floor(h2.attributes.strength * (Math.random() * 0.5 + 0.5) * h2Crit * (1 + h2.attributes.intelligence / 20)));
