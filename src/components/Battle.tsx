@@ -5,9 +5,9 @@ import { useMissionContext } from '../context/MissionContext';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Particles from 'react-tsparticles';
-import { loadSlim } from 'tsparticles-slim';
-import type { Engine } from 'tsparticles-engine';
-import type { ISourceOptions } from 'tsparticles-engine'; // Ajustado para ISourceOptions
+import { loadSlim } from '@tsparticles/slim';
+import type { Engine } from '@tsparticles/engine';
+import type { ISourceOptions } from '@tsparticles/engine';
 
 interface Hero {
   id: string;

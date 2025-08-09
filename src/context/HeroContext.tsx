@@ -4,6 +4,7 @@ import db from '../utils/dbSetup';
 export interface Hero {
   id: string;
   name: string;
+  race: string;
   class: string;
   attributes: { strength: number; dexterity: number; intelligence: number; constitution: number };
   story?: string;
@@ -12,14 +13,14 @@ export interface Hero {
   level: number;
   mana: number;
   skills: { name: string; cost: number }[];
-  alignment: string; // Novo: Leal e Bom, Caótico, etc.
-  objective: string; // Novo: Busca por Poder, Riqueza, Justiça
-  battleCry: string; // Novo: Frase de batalha
+  alignment: string;
+  objective: string;
+  battleCry: string;
 }
 
 interface HeroContextType {
   heroes: Hero[];
-  addHero: (hero: Omit<Hero, 'id' | 'xp' | 'level' | 'mana' | 'skills' | 'alignment' | 'objective' | 'battleCry'>) => void;
+  addHero: (hero: Omit<Hero, 'id' | 'xp' | 'level' | 'mana' | 'skills' | 'alignment' | 'objective' | 'battleCry' | 'race'> & { race: string }) => void;
   updateHero: (hero: Hero) => void;
   deleteHero: (id: string) => void;
 }
@@ -29,7 +30,7 @@ const HeroContext = createContext<HeroContextType | undefined>(undefined);
 export function HeroProvider({ children }: { children: ReactNode }) {
   const [heroes, setHeroes] = useState<Hero[]>(db.get('heroes').value());
 
-  const addHero = (hero: Omit<Hero, 'id' | 'xp' | 'level' | 'mana' | 'skills' | 'alignment' | 'objective' | 'battleCry'>) => {
+  const addHero = (hero: Omit<Hero, 'id' | 'xp' | 'level' | 'mana' | 'skills' | 'alignment' | 'objective' | 'battleCry' | 'race'> & { race: string }) => {
     const totalPoints = hero.attributes.strength + hero.attributes.dexterity + hero.attributes.intelligence + hero.attributes.constitution;
     if (totalPoints > 18) {
       throw new Error('O total de pontos de atributos não pode exceder 18!');
@@ -41,9 +42,10 @@ export function HeroProvider({ children }: { children: ReactNode }) {
       level: 1,
       mana: 10,
       skills: getClassSkills(hero.class),
-      alignment: 'Leal e Bom', // Padrão, pode ser alterado
-      objective: 'Justiça', // Padrão, pode ser alterado
-      battleCry: generateRandomBattleCry(hero.class), // Geração aleatória inicial
+      alignment: 'Leal e Bom',
+      objective: 'Justiça',
+      battleCry: generateRandomBattleCry(hero.class),
+      race: hero.race,
     };
     const updatedHeroes = [...heroes, newHero];
     setHeroes(updatedHeroes);

@@ -52,7 +52,7 @@ export default function CreateHero() {
   };
 
   const generateHeroStory = () => {
-    const story = generateStory(formData.name, formData.class, formData.attributes);
+    const story = generateStory({ name: formData.name, class: formData.class, attributes: formData.attributes });
     setFormData((prev) => ({ ...prev, story }));
   };
 
@@ -132,13 +132,20 @@ export default function CreateHero() {
     }
 
     addHero({
-      ...formData,
-      id: Date.now().toString(),
+      name,
+      race: formData.race,
+      class: formData.class,
+      attributes,
+      story: formData.story,
+      image: formData.image || '/images/default-hero.png',
       level: 1,
       xp: 0,
       mana: 10,
       skills: [{ name: 'Golpe Básico', cost: 0 }],
-      image: formData.image || '/images/default-hero.png',
+      alignment: formData.alignment,
+      objective: formData.objective,
+      battleCry: formData.battleCry,
+      id: Date.now().toString(),
     });
     completeMission(missions.find((m) => m.description === 'Crie seu primeiro herói')?.id || '');
     navigate('/gallery');

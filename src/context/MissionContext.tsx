@@ -5,8 +5,8 @@ interface Mission {
   id: string;
   description: string;
   completed: boolean;
-  reward?: string; // Recompensa opcional (ex.: "100 XP", "Emblema de Valente")
-  timestamp?: number; // Para rastrear quando a missão foi completada
+  reward?: string;
+  timestamp?: number;
 }
 
 interface MissionContextType {
@@ -14,6 +14,7 @@ interface MissionContextType {
   completeMission: (id: string) => void;
   addMission: (description: string, reward?: string) => void;
   resetMissions: () => void;
+  generateMission: () => void;
 }
 
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
@@ -31,12 +32,10 @@ export function MissionProvider({ children }: { children: ReactNode }) {
         ];
   });
 
-  // Persistir missões no localStorage
   useEffect(() => {
     localStorage.setItem('missions', JSON.stringify(missions));
   }, [missions]);
 
-  // Completar uma missão
   const completeMission = (id: string) => {
     setMissions((prev) =>
       prev.map((mission) =>
@@ -45,7 +44,6 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  // Adicionar uma nova missão
   const addMission = (description: string, reward?: string) => {
     setMissions((prev) => [
       ...prev,
@@ -53,7 +51,6 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     ]);
   };
 
-  // Resetar todas as missões (para testes ou reinício)
   const resetMissions = () => {
     setMissions([
       { id: uuidv4(), description: 'Crie seu primeiro herói', completed: false, reward: 'Emblema de Forjador' },
@@ -63,8 +60,21 @@ export function MissionProvider({ children }: { children: ReactNode }) {
     ]);
   };
 
+  const generateMission = () => {
+    const attributes = ['força', 'destreza', 'inteligência', 'constituição'];
+    const randomAttr = attributes[Math.floor(Math.random() * attributes.length)];
+    const randomValue = Math.floor(Math.random() * 10) + 1;
+    const newMission = {
+      id: uuidv4(),
+      description: `Derrote um inimigo com ${randomAttr} > ${randomValue}`,
+      completed: false,
+      reward: `${50 + Math.floor(Math.random() * 50)} XP`,
+    };
+    setMissions((prev) => [...prev, newMission]);
+  };
+
   return (
-    <MissionContext.Provider value={{ missions, completeMission, addMission, resetMissions }}>
+    <MissionContext.Provider value={{ missions, completeMission, addMission, resetMissions, generateMission }}>
       {children}
     </MissionContext.Provider>
   );
