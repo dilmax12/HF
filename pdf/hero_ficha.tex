@@ -1,0 +1,75 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+
+% Configuração de margens
+\geometry{margin=1in}
+
+% Estilo de cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{Forjador de Heróis}}
+\fancyhead[R]{Ficha do Herói}
+\fancyfoot[C]{Página \thepage\ de \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% Configuração de cores temáticas
+\definecolor{medievalgold}{RGB}{212, 175, 55}
+\definecolor{medievaldark}{RGB}{44, 36, 28}
+
+% Configuração de fontes
+\usepackage{charter} % Fonte serifada clássica
+
+\begin{document}
+
+% Título decorado
+\begin{center}
+    \textcolor{medievalgold}{\Huge\textbf{Ficha de Herói Medieval}} \\
+    \vspace{0.5cm}
+    \rule{\textwidth}{1pt} % Linha decorativa
+\end{center}
+
+% Dados do Herói
+\section*{Detalhes do Herói}
+\begin{tabular}{p{3cm} p{10cm}}
+    \textbf{Nome:} & Rowena \\
+    \textbf{Classe:} & Arqueira \\
+    \textbf{Nível:} & 1 \\
+    \textbf{XP:} & 0 \\
+    \textbf{Mana:} & 50 \\
+    \textbf{Alinhamento:} & Neutro \\
+\end{tabular}
+
+\section*{Atributos}
+\begin{tabular}{l c c}
+    \toprule
+    \textbf{Atributo} & \textbf{Valor} \\
+    \midrule
+    Força & 4 \\
+    Destreza & 6 \\
+    Inteligência & 3 \\
+    Constituição & 5 \\
+    \bottomrule
+\end{tabular}
+
+\section*{História}
+Rowena cresceu nas florestas profundas, aprendendo a manejar o arco com mestria. Sua vida foi moldada por uma busca por vingança contra os caçadores que destruíram sua vila.
+
+\section*{Aparência}
+Descrição: Uma figura esguia com cabelos castanhos longos, vestida com uma capa verde e carregando um arco élfico. (Nota: Imagem não incluída no PDF devido a limitações.)
+
+% Rodapé decorativo
+\vspace{1cm}
+\begin{center}
+    \textcolor{medievaldark}{\small Criado pelo Forjador de Heróis - \today}
+\end{center}
+
+\end{document}
